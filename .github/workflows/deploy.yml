@@ -1,26 +1,18 @@
-name: 🚀 Deploy static site to Cloudflare Pages
+name: 🚀 Deploy static content to Cloudflare Pages
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
-    inputs:
-      project_name:
-        description: "Cloudflare Pages project name"
-        required: true
-        default: "example-pages"
 
 permissions:
   contents: read
-  id-token: write
-
-concurrency:
-  group: "cloudflare-pages"
-  cancel-in-progress: true
+  deployments: write
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    name: Build and Deploy
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -28,8 +20,8 @@ jobs:
       - name: 🟢 Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
-          cache: npm
+          node-version: "lts/*"
+          cache: "npm"
 
       - name: 📦 Install dependencies
         run: npm ci
@@ -38,8 +30,11 @@ jobs:
         run: npm run build
 
       - name: 🚀 Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./dist --project-name=${{ github.event.inputs.project_name }} --branch=main
+          projectName: "my-static-site"
+          directory: "dist"
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: "main"
