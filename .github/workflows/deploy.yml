@@ -4,15 +4,27 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      project_name:
+        description: 'Cloudflare Pages Project Name (must match Terraform)'
+        required: false
+
+env:
+  CLOUDFLARE_PROJECT_NAME: 'my-awesome-project'
+  NODE_VERSION: 'lts/*'
+  BUILD_DIR: 'dist'
 
 permissions:
   contents: read
   deployments: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    name: Build and Deploy
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -20,7 +32,7 @@ jobs:
       - name: 🟢 Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "lts/*"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: 📦 Install dependencies
@@ -30,11 +42,11 @@ jobs:
         run: npm run build
 
       - name: 🚀 Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: "my-static-site"
-          directory: "dist"
+          projectName: ${{ inputs.project_name || env.CLOUDFLARE_PROJECT_NAME }}
+          directory: ${{ env.BUILD_DIR }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: "main"
+          branch: 'main'
