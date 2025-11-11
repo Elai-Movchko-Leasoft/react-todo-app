@@ -10,7 +10,7 @@ on:
         required: false
 
 env:
-  CLOUDFLARE_PROJECT_NAME: 'my-awesome-project'
+  CLOUDFLARE_PROJECT_NAME: 'todo'
   NODE_VERSION: 'lts/*'
   BUILD_DIR: 'dist'
 
@@ -46,7 +46,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ inputs.project_name || env.CLOUDFLARE_PROJECT_NAME }}
-          directory: ${{ env.BUILD_DIR }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'main'
+          command: pages deploy ${{ env.BUILD_DIR }} --project-name="${{ inputs.project_name || env.CLOUDFLARE_PROJECT_NAME }}" --branch=main
